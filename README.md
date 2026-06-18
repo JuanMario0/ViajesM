@@ -47,3 +47,5 @@ Esto instala las 10 skills en `.agents/skills/`:
 - HTML + CSS (Tailwind CDN) + Vanilla JS
 - Sin build step, sin dependencias, sin framework
 - Persistencia en localStorage
+
+Para instalar ux: https://www.ui-skills.com/
