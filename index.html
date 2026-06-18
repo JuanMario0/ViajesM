@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ViajesM · Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<style>*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}</style>
+</head>
+<body class="bg-neutral-50 text-neutral-900 antialiased">
+<div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+  <header class="mb-10 flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">ViajesM</h1>
+      <p class="mt-1 text-sm text-neutral-500 text-pretty">Gastos de transporte · CDMX</p>
+    </div>
+    <button onclick="abrirModal()" class="inline-flex items-center gap-1.5 rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2">
+      <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+      Nuevo viaje
+    </button>
+  </header>
+
+  <section class="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="rounded-xl border border-neutral-200 bg-white p-5">
+      <p class="text-xs font-medium uppercase tracking-wider text-neutral-500">Total viajes</p>
+      <p class="mt-2 text-3xl font-semibold tabular-nums" id="total-trips">0</p>
+    </div>
+    <div class="rounded-xl border border-neutral-200 bg-white p-5">
+      <p class="text-xs font-medium uppercase tracking-wider text-neutral-500">Gastado hoy</p>
+      <p class="mt-2 text-3xl font-semibold tabular-nums" id="total-today">$0</p>
+    </div>
+    <div class="rounded-xl border border-neutral-200 bg-white p-5">
+      <p class="text-xs font-medium uppercase tracking-wider text-neutral-500">Este mes</p>
+      <p class="mt-2 text-3xl font-semibold tabular-nums" id="total-month">$0</p>
+    </div>
+    <div class="rounded-xl border border-neutral-200 bg-white p-5">
+      <p class="text-xs font-medium uppercase tracking-wider text-neutral-500">Más usado</p>
+      <p class="mt-2 text-3xl font-semibold tabular-nums" id="most-used">—</p>
+    </div>
+  </section>
+
+  <section class="mb-8 grid gap-6 lg:grid-cols-2">
+    <div class="rounded-xl border border-neutral-200 bg-white p-5">
+      <h2 class="text-sm font-semibold text-neutral-900 text-balance">Frecuencia por transporte</h2>
+      <div class="mt-4 space-y-3" id="bar-chart"></div>
+    </div>
+    <div class="rounded-xl border border-neutral-200 bg-white p-5">
+      <h2 class="text-sm font-semibold text-neutral-900 text-balance">Gasto por transporte</h2>
+      <div class="mt-4 space-y-3" id="cost-chart"></div>
+    </div>
+  </section>
+
+  <section class="rounded-xl border border-neutral-200 bg-white">
+    <div class="flex items-center justify-between border-b border-neutral-100 px-5 py-4">
+      <h2 class="text-sm font-semibold text-neutral-900 text-balance">Historial</h2>
+      <select id="filter-type" onchange="renderizar()" class="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400">
+        <option value="all">Todos</option>
+        <option value="Tren Ligero">Tren Ligero</option>
+        <option value="Combi">Combi</option>
+        <option value="Trolebús">Trolebús</option>
+      </select>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-neutral-100 text-left text-xs font-medium uppercase tracking-wider text-neutral-500">
+            <th class="px-5 py-3 font-medium">Fecha</th>
+            <th class="px-5 py-3 font-medium">Transporte</th>
+            <th class="px-5 py-3 font-medium">Origen</th>
+            <th class="px-5 py-3 font-medium">Destino</th>
+            <th class="px-5 py-3 text-right font-medium tabular-nums">Costo</th>
+            <th class="px-5 py-3 text-right font-medium"></th>
+          </tr>
+        </thead>
+        <tbody id="trip-table" class="divide-y divide-neutral-100"></tbody>
+      </table>
+    </div>
+    <div class="px-5 py-4 text-center text-xs text-neutral-400" id="empty-state">
+      <p class="text-pretty">No hay viajes registrados. Agrega tu primer viaje.</p>
+    </div>
+  </section>
+</div>
+
+<div id="modal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-label="Formulario de viaje">
+  <div onclick="cerrarModal()" class="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
+  <div class="absolute left-1/2 top-1/2 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-neutral-200 bg-white p-6 shadow-lg">
+    <div class="mb-5 flex items-center justify-between">
+      <h3 class="text-base font-semibold text-neutral-900 text-balance" id="modal-title">Nuevo viaje</h3>
+      <button onclick="cerrarModal()" class="rounded-md p-1 text-neutral-400 transition-colors hover:text-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400" aria-label="Cerrar">
+        <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="form" class="space-y-4">
+      <div>
+        <label for="tipo" class="block text-xs font-medium text-neutral-600">Transporte</label>
+        <select id="tipo" required class="mt-1 block w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900">
+          <option value="Tren Ligero">Tren Ligero</option>
+          <option value="Combi">Combi</option>
+          <option value="Trolebús">Trolebús</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="origen" class="block text-xs font-medium text-neutral-600">Origen</label>
+          <input id="origen" type="text" required class="mt-1 block w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900" placeholder="Ej: Tasqueña" />
+        </div>
+        <div>
+          <label for="destino" class="block text-xs font-medium text-neutral-600">Destino</label>
+          <input id="destino" type="text" required class="mt-1 block w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900" placeholder="Ej: Xochimilco" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="fecha" class="block text-xs font-medium text-neutral-600">Fecha</label>
+          <input id="fecha" type="date" required class="mt-1 block w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900" />
+        </div>
+        <div>
+          <label for="costo" class="block text-xs font-medium text-neutral-600">Costo ($)</label>
+          <input id="costo" type="number" min="0" step="0.5" required class="mt-1 block w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900" placeholder="0" />
+        </div>
+      </div>
+      <button type="submit" class="w-full rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2">Guardar</button>
+    </form>
+  </div>
+</div>
+
+<script>
+const TIPOS = ['Tren Ligero', 'Combi', 'Trolebús'];
+const COLORES = { 'Tren Ligero': '#525252', 'Combi': '#a3a3a3', 'Trolebús': '#d4d4d4' };
+let viajes = JSON.parse(localStorage.getItem('viajesm') || '[]');
+let editando = -1; // ponytail: -1 = nuevo, >=0 = índice edición
+
+function guardar() { localStorage.setItem('viajesm', JSON.stringify(viajes)); }
+
+function fmt(n) { return n.toLocaleString('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
+
+function abrirModal(idx) {
+  editando = idx ?? -1;
+  const esEditar = editando >= 0;
+  document.getElementById('modal-title').textContent = esEditar ? 'Editar viaje' : 'Nuevo viaje';
+  const t = esEditar ? viajes[editando] : {};
+  document.getElementById('tipo').value = t.tipo || 'Tren Ligero';
+  document.getElementById('origen').value = t.origen || '';
+  document.getElementById('destino').value = t.destino || '';
+  document.getElementById('fecha').value = t.fecha || new Date().toISOString().slice(0, 10);
+  document.getElementById('costo').value = t.costo ?? '';
+  document.getElementById('modal').classList.remove('hidden');
+}
+
+function cerrarModal() { document.getElementById('modal').classList.add('hidden'); editando = -1; }
+
+document.getElementById('form').addEventListener('submit', e => {
+  e.preventDefault();
+  const d = new FormData(e.target);
+  const viaje = {
+    tipo: d.get('tipo'), origen: d.get('origen'), destino: d.get('destino'),
+    fecha: d.get('fecha'), costo: parseFloat(d.get('costo')) || 0,
+  };
+  if (editando >= 0) viajes[editando] = viaje;
+  else viajes.unshift(viaje);
+  guardar();
+  cerrarModal();
+  renderizar();
+});
+
+function eliminar(i) { viajes.splice(i, 1); guardar(); renderizar(); }
+
+function renderizar() { // ponytail: single render pass, no framework
+  const f = document.getElementById('filter-type').value;
+  const filtrados = f === 'all' ? viajes : viajes.filter(t => t.tipo === f);
+
+  document.getElementById('total-trips').textContent = filtrados.length;
+
+  const hoy = new Date().toISOString().slice(0, 10);
+  document.getElementById('total-today').textContent = '$' + filtrados.filter(t => t.fecha === hoy).reduce((s, t) => s + t.costo, 0);
+  document.getElementById('total-month').textContent = '$' + filtrados.filter(t => t.fecha.startsWith(hoy.slice(0, 7))).reduce((s, t) => s + t.costo, 0);
+
+  const freq = {}, costos = {};
+  filtrados.forEach(t => { freq[t.tipo] = (freq[t.tipo] || 0) + 1; costos[t.tipo] = (costos[t.tipo] || 0) + t.costo; });
+  const masUsado = Object.entries(freq).sort((a, b) => b[1] - a[1]);
+  document.getElementById('most-used').textContent = masUsado.length ? masUsado[0][0] : '—';
+
+  // ponytail: CSS bars instead of a chart library
+  const maxFreq = Math.max(...Object.values(freq), 1);
+  const maxCosto = Math.max(...Object.values(costos), 1);
+  document.getElementById('bar-chart').innerHTML = TIPOS.map(t => {
+    const n = freq[t] || 0;
+    return `<div class="flex items-center gap-3"><span class="w-24 text-xs font-medium text-neutral-600 truncate">${t}</span><div class="flex-1 h-2 rounded-full bg-neutral-100 overflow-hidden"><div class="h-full rounded-full" style="width:${n/maxFreq*100}%;background:${COLORES[t]}"></div></div><span class="w-8 text-right text-xs font-semibold tabular-nums text-neutral-700">${n}</span></div>`;
+  }).join('');
+  document.getElementById('cost-chart').innerHTML = TIPOS.map(t => {
+    const c = costos[t] || 0;
+    return `<div class="flex items-center gap-3"><span class="w-24 text-xs font-medium text-neutral-600 truncate">${t}</span><div class="flex-1 h-2 rounded-full bg-neutral-100 overflow-hidden"><div class="h-full rounded-full" style="width:${c/maxCosto*100}%;background:${COLORES[t]}"></div></div><span class="w-20 text-right text-xs font-semibold tabular-nums text-neutral-700">${fmt(c)}</span></div>`;
+  }).join('');
+
+  const tb = document.getElementById('trip-table');
+  if (!filtrados.length) { tb.innerHTML = ''; document.getElementById('empty-state').classList.remove('hidden'); return; }
+  document.getElementById('empty-state').classList.add('hidden');
+  tb.innerHTML = filtrados.map(t => {
+    const i = viajes.indexOf(t);
+    return `<tr class="transition-colors hover:bg-neutral-50"><td class="px-5 py-3 tabular-nums text-neutral-700 text-xs">${t.fecha}</td><td class="px-5 py-3"><span class="inline-flex items-center gap-1.5 text-xs font-medium text-neutral-700"><span class="size-2 rounded-full" style="background:${COLORES[t.tipo]}"></span>${t.tipo}</span></td><td class="px-5 py-3 text-xs text-neutral-600">${t.origen}</td><td class="px-5 py-3 text-xs text-neutral-600">${t.destino}</td><td class="px-5 py-3 text-right text-xs font-semibold tabular-nums text-neutral-700">${fmt(t.costo)}</td><td class="px-5 py-3 text-right"><div class="flex items-center justify-end gap-1"><button onclick="abrirModal(${i})" class="rounded-md p-1 text-neutral-400 transition-colors hover:text-neutral-600" aria-label="Editar"><svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/></svg></button><button onclick="eliminar(${i})" class="rounded-md p-1 text-neutral-400 transition-colors hover:text-red-500" aria-label="Eliminar"><svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg></button></div></td></tr>`;
+  }).join('');
+}
+
+renderizar();
+</script>
+</body>
+</html>
