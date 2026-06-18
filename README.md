@@ -15,6 +15,33 @@ Dashboard de gastos de transporte para CDMX (Tren Ligero, Combi, Trolebús).
 | **ponytail-review** | Revisión de over-engineering |
 | **ponytail-audit** | Auditoría de bloat en el código |
 
+## Instalación de skills
+
+Instalar en otro dispositivo (requiere OpenCode o Claude Code):
+
+```bash
+# UI Skills (ibelick)
+npx skills add ibelick/ui-skills
+
+# Ponytail (DietrichGebert)
+npx skills add https://github.com/DietrichGebert/ponytail
+```
+
+Esto instala las 10 skills en `.agents/skills/`:
+
+| Skill | Comando individual |
+|---|---|
+| `ui-skills-root` | `npx ui-skills get ui-skills-root` |
+| `baseline-ui` | `npx ui-skills add baseline-ui` |
+| `fixing-accessibility` | `npx ui-skills add fixing-accessibility` |
+| `fixing-motion-performance` | `npx ui-skills add fixing-motion-performance` |
+| `fixing-metadata` | `npx ui-skills add fixing-metadata` |
+| `ponytail` | incluida en el pack |
+| `ponytail-review` | incluida en el pack |
+| `ponytail-audit` | incluida en el pack |
+| `ponytail-debt` | incluida en el pack |
+| `ponytail-help` | incluida en el pack |
+
 ## Stack
 
 - HTML + CSS (Tailwind CDN) + Vanilla JS
