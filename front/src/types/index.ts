@@ -21,3 +21,9 @@ export interface Stats {
   frecuencia: Record<string, number>;
   gastoPorTipo: Record<string, number>;
 }
+
+export interface User {
+  id: number;
+  nombre: string;
+  email: string;
+}
