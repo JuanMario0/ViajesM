@@ -128,80 +128,77 @@
 </div>
 
 <script>
+const API = 'http://localhost:8080/api';
 const TIPOS = ['Tren Ligero', 'Combi', 'Trolebús'];
 const COLORES = { 'Tren Ligero': '#525252', 'Combi': '#a3a3a3', 'Trolebús': '#d4d4d4' };
-let viajes = JSON.parse(localStorage.getItem('viajesm') || '[]');
-let editando = -1; // ponytail: -1 = nuevo, >=0 = índice edición
-
-function guardar() { localStorage.setItem('viajesm', JSON.stringify(viajes)); }
+let viajes = [];
+let editando = null;
 
 function fmt(n) { return n.toLocaleString('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
 
-function abrirModal(idx) {
-  editando = idx ?? -1;
-  const esEditar = editando >= 0;
-  document.getElementById('modal-title').textContent = esEditar ? 'Editar viaje' : 'Nuevo viaje';
-  const t = esEditar ? viajes[editando] : {};
-  document.getElementById('tipo').value = t.tipo || 'Tren Ligero';
-  document.getElementById('origen').value = t.origen || '';
-  document.getElementById('destino').value = t.destino || '';
-  document.getElementById('fecha').value = t.fecha || new Date().toISOString().slice(0, 10);
-  document.getElementById('costo').value = t.costo ?? '';
+async function req(path, opts) {
+  const r = await fetch(API + path, { headers: { 'Content-Type': 'application/json' }, ...opts });
+  if (!r.ok) { const e = await r.json(); alert(e.error || 'Error'); throw e; }
+  return r.status === 204 ? null : r.json();
+}
+
+async function cargarStats() {
+  const s = await req('/stats');
+  document.getElementById('total-trips').textContent = s.totalViajes;
+  document.getElementById('total-today').textContent = fmt(s.gastoHoy);
+  document.getElementById('total-month').textContent = fmt(s.gastoMes);
+  document.getElementById('most-used').textContent = s.masUsado || '—';
+
+  const maxF = Math.max(...Object.values(s.frecuencia), 1);
+  const maxC = Math.max(...Object.values(s.gastoPorTipo), 1);
+  document.getElementById('bar-chart').innerHTML = TIPOS.map(t =>
+    `<div class="flex items-center gap-3"><span class="w-24 text-xs font-medium text-neutral-600 truncate">${t}</span><div class="flex-1 h-2 rounded-full bg-neutral-100 overflow-hidden"><div class="h-full rounded-full" style="width:${(s.frecuencia[t]||0)/maxF*100}%;background:${COLORES[t]}"></div></div><span class="w-8 text-right text-xs font-semibold tabular-nums text-neutral-700">${s.frecuencia[t]||0}</span></div>`
+  ).join('');
+  document.getElementById('cost-chart').innerHTML = TIPOS.map(t =>
+    `<div class="flex items-center gap-3"><span class="w-24 text-xs font-medium text-neutral-600 truncate">${t}</span><div class="flex-1 h-2 rounded-full bg-neutral-100 overflow-hidden"><div class="h-full rounded-full" style="width:${(s.gastoPorTipo[t]||0)/maxC*100}%;background:${COLORES[t]}"></div></div><span class="w-20 text-right text-xs font-semibold tabular-nums text-neutral-700">${fmt(s.gastoPorTipo[t]||0)}</span></div>`
+  ).join('');
+}
+
+function abrirModal(viaje) {
+  editando = viaje ? viaje.id : null;
+  document.getElementById('modal-title').textContent = viaje ? 'Editar viaje' : 'Nuevo viaje';
+  document.getElementById('tipo').value = viaje ? viaje.tipo : 'Tren Ligero';
+  document.getElementById('origen').value = viaje ? viaje.origen : '';
+  document.getElementById('destino').value = viaje ? viaje.destino : '';
+  document.getElementById('fecha').value = viaje ? viaje.fecha : new Date().toISOString().slice(0, 10);
+  document.getElementById('costo').value = viaje ? viaje.costo : '';
   document.getElementById('modal').classList.remove('hidden');
 }
 
-function cerrarModal() { document.getElementById('modal').classList.add('hidden'); editando = -1; }
+function cerrarModal() { document.getElementById('modal').classList.add('hidden'); editando = null; }
 
-document.getElementById('form').addEventListener('submit', e => {
+document.getElementById('form').addEventListener('submit', async e => {
   e.preventDefault();
   const d = new FormData(e.target);
-  const viaje = {
-    tipo: d.get('tipo'), origen: d.get('origen'), destino: d.get('destino'),
-    fecha: d.get('fecha'), costo: parseFloat(d.get('costo')) || 0,
-  };
-  if (editando >= 0) viajes[editando] = viaje;
-  else viajes.unshift(viaje);
-  guardar();
+  const body = { tipo: d.get('tipo'), origen: d.get('origen'), destino: d.get('destino'), fecha: d.get('fecha'), costo: parseFloat(d.get('costo')) || 0 };
+  if (editando) await req('/viajes/' + editando, { method: 'PUT', body: JSON.stringify(body) });
+  else await req('/viajes', { method: 'POST', body: JSON.stringify(body) });
   cerrarModal();
   renderizar();
 });
 
-function eliminar(i) { viajes.splice(i, 1); guardar(); renderizar(); }
+async function eliminar(id) {
+  if (!confirm('¿Eliminar este viaje?')) return;
+  await req('/viajes/' + id, { method: 'DELETE' });
+  renderizar();
+}
 
-function renderizar() { // ponytail: single render pass, no framework
+async function renderizar() {
   const f = document.getElementById('filter-type').value;
-  const filtrados = f === 'all' ? viajes : viajes.filter(t => t.tipo === f);
-
-  document.getElementById('total-trips').textContent = filtrados.length;
-
-  const hoy = new Date().toISOString().slice(0, 10);
-  document.getElementById('total-today').textContent = '$' + filtrados.filter(t => t.fecha === hoy).reduce((s, t) => s + t.costo, 0);
-  document.getElementById('total-month').textContent = '$' + filtrados.filter(t => t.fecha.startsWith(hoy.slice(0, 7))).reduce((s, t) => s + t.costo, 0);
-
-  const freq = {}, costos = {};
-  filtrados.forEach(t => { freq[t.tipo] = (freq[t.tipo] || 0) + 1; costos[t.tipo] = (costos[t.tipo] || 0) + t.costo; });
-  const masUsado = Object.entries(freq).sort((a, b) => b[1] - a[1]);
-  document.getElementById('most-used').textContent = masUsado.length ? masUsado[0][0] : '—';
-
-  // ponytail: CSS bars instead of a chart library
-  const maxFreq = Math.max(...Object.values(freq), 1);
-  const maxCosto = Math.max(...Object.values(costos), 1);
-  document.getElementById('bar-chart').innerHTML = TIPOS.map(t => {
-    const n = freq[t] || 0;
-    return `<div class="flex items-center gap-3"><span class="w-24 text-xs font-medium text-neutral-600 truncate">${t}</span><div class="flex-1 h-2 rounded-full bg-neutral-100 overflow-hidden"><div class="h-full rounded-full" style="width:${n/maxFreq*100}%;background:${COLORES[t]}"></div></div><span class="w-8 text-right text-xs font-semibold tabular-nums text-neutral-700">${n}</span></div>`;
-  }).join('');
-  document.getElementById('cost-chart').innerHTML = TIPOS.map(t => {
-    const c = costos[t] || 0;
-    return `<div class="flex items-center gap-3"><span class="w-24 text-xs font-medium text-neutral-600 truncate">${t}</span><div class="flex-1 h-2 rounded-full bg-neutral-100 overflow-hidden"><div class="h-full rounded-full" style="width:${c/maxCosto*100}%;background:${COLORES[t]}"></div></div><span class="w-20 text-right text-xs font-semibold tabular-nums text-neutral-700">${fmt(c)}</span></div>`;
-  }).join('');
+  viajes = await req('/viajes?tipo=' + f);
+  await cargarStats();
 
   const tb = document.getElementById('trip-table');
-  if (!filtrados.length) { tb.innerHTML = ''; document.getElementById('empty-state').classList.remove('hidden'); return; }
+  if (!viajes.length) { tb.innerHTML = ''; document.getElementById('empty-state').classList.remove('hidden'); return; }
   document.getElementById('empty-state').classList.add('hidden');
-  tb.innerHTML = filtrados.map(t => {
-    const i = viajes.indexOf(t);
-    return `<tr class="transition-colors hover:bg-neutral-50"><td class="px-5 py-3 tabular-nums text-neutral-700 text-xs">${t.fecha}</td><td class="px-5 py-3"><span class="inline-flex items-center gap-1.5 text-xs font-medium text-neutral-700"><span class="size-2 rounded-full" style="background:${COLORES[t.tipo]}"></span>${t.tipo}</span></td><td class="px-5 py-3 text-xs text-neutral-600">${t.origen}</td><td class="px-5 py-3 text-xs text-neutral-600">${t.destino}</td><td class="px-5 py-3 text-right text-xs font-semibold tabular-nums text-neutral-700">${fmt(t.costo)}</td><td class="px-5 py-3 text-right"><div class="flex items-center justify-end gap-1"><button onclick="abrirModal(${i})" class="rounded-md p-1 text-neutral-400 transition-colors hover:text-neutral-600" aria-label="Editar"><svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/></svg></button><button onclick="eliminar(${i})" class="rounded-md p-1 text-neutral-400 transition-colors hover:text-red-500" aria-label="Eliminar"><svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg></button></div></td></tr>`;
-  }).join('');
+  tb.innerHTML = viajes.map(t =>
+    `<tr class="transition-colors hover:bg-neutral-50"><td class="px-5 py-3 tabular-nums text-neutral-700 text-xs">${t.fecha}</td><td class="px-5 py-3"><span class="inline-flex items-center gap-1.5 text-xs font-medium text-neutral-700"><span class="size-2 rounded-full" style="background:${COLORES[t.tipo]}"></span>${t.tipo}</span></td><td class="px-5 py-3 text-xs text-neutral-600">${t.origen}</td><td class="px-5 py-3 text-xs text-neutral-600">${t.destino}</td><td class="px-5 py-3 text-right text-xs font-semibold tabular-nums text-neutral-700">${fmt(t.costo)}</td><td class="px-5 py-3 text-right"><div class="flex items-center justify-end gap-1"><button onclick='abrirModal(${JSON.stringify(t).replace(/'/g, "&#39;")})' class="rounded-md p-1 text-neutral-400 transition-colors hover:text-neutral-600" aria-label="Editar"><svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/></svg></button><button onclick="eliminar(${t.id})" class="rounded-md p-1 text-neutral-400 transition-colors hover:text-red-500" aria-label="Eliminar"><svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg></button></div></td></tr>`
+  ).join('');
 }
 
 renderizar();
