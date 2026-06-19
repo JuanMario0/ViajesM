@@ -54,7 +54,7 @@
           <span class="flex items-center gap-1"><span class="size-2.5 rounded-full bg-[#d4d4d4]"></span>Trolebús</span>
         </div>
       </div>
-      <div id="map" class="h-80 w-full rounded-xl border border-neutral-100"></div>
+      <div id="map" class="h-80 w-full min-h-[20rem] rounded-xl border border-neutral-100"></div>
     </section>
     <section class="lg:col-span-2 rounded-xl border border-neutral-200 bg-white p-5">
       <h2 class="text-sm font-semibold text-neutral-900 text-balance mb-3">Tiempo promedio por ruta</h2>
@@ -108,8 +108,8 @@
 </div>
 
 <div id="modal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-label="Formulario de viaje">
-  <div onclick="cerrarModal()" class="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
-  <div class="absolute left-1/2 top-1/2 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-xl border border-neutral-200 bg-white p-6 shadow-lg">
+  <div onclick="cerrarModal()" class="absolute inset-0 bg-black/20"></div>
+  <div class="absolute left-1/2 top-1/2 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 max-h-[90vh] overflow-y-auto rounded-xl border border-neutral-200 bg-white p-6 shadow-lg">
     <div class="mb-5 flex items-center justify-between">
       <h3 class="text-base font-semibold text-neutral-900 text-balance" id="modal-title">Nuevo viaje</h3>
       <button onclick="cerrarModal()" class="rounded-md p-1 text-neutral-400 transition-colors hover:text-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400" aria-label="Cerrar">
@@ -266,7 +266,7 @@ function abrirModal(id) {
   document.getElementById('modal').classList.remove('hidden');
 }
 
-function cerrarModal() { document.getElementById('modal').classList.add('hidden'); editando = null; }
+function cerrarModal() { document.getElementById('modal').classList.add('hidden'); editando = null; setTimeout(() => { try { mapa.invalidateSize(); } catch(e) {} }, 200); }
 
 document.getElementById('form').addEventListener('submit', async e => {
   e.preventDefault();
