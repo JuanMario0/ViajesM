@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
-<style>*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}.leaflet-container{border-radius:.75rem}</style>
+<style>*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}.leaflet-container{border-radius:.75rem}#map{position:relative;z-index:0;isolation:isolate}#modal{isolation:isolate}</style>
 </head>
 <body class="bg-neutral-50 text-neutral-900 antialiased">
 <div class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
@@ -107,7 +107,7 @@
   </section>
 </div>
 
-<div id="modal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-label="Formulario de viaje">
+<div id="modal" class="fixed inset-0 z-[9999] hidden" role="dialog" aria-modal="true" aria-label="Formulario de viaje">
   <div onclick="cerrarModal()" class="absolute inset-0 bg-black/20"></div>
   <div class="absolute left-1/2 top-1/2 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 max-h-[90vh] overflow-y-auto rounded-xl border border-neutral-200 bg-white p-6 shadow-lg">
     <div class="mb-5 flex items-center justify-between">
