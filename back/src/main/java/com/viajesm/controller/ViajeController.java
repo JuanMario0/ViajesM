@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
-@RestController // Expone endpoints REST
-@RequestMapping("/api/viajes") // Base URL para este controller
+@RestController
+@RequestMapping("/api/viajes")
 public class ViajeController {
 
   private final ViajeService service;
@@ -31,18 +31,30 @@ public class ViajeController {
     return service.obtener(id);
   }
 
+  private Viaje mapear(ViajeRequest req) {
+    Viaje v = new Viaje();
+    v.setTipo(req.getTipo());
+    v.setOrigen(req.getOrigen());
+    v.setDestino(req.getDestino());
+    v.setFecha(LocalDate.parse(req.getFecha()));
+    v.setCosto(req.getCosto());
+    v.setHoraSalida(req.getHoraSalida());
+    v.setHoraLlegada(req.getHoraLlegada());
+    v.setOrigenLat(req.getOrigenLat());
+    v.setOrigenLng(req.getOrigenLng());
+    v.setDestinoLat(req.getDestinoLat());
+    v.setDestinoLng(req.getDestinoLng());
+    return v;
+  }
+
   @PostMapping
   public ResponseEntity<Viaje> crear(@Valid @RequestBody ViajeRequest req) {
-    Viaje v = new Viaje(req.getTipo(), req.getOrigen(), req.getDestino(),
-        LocalDate.parse(req.getFecha()), req.getCosto());
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.crear(v));
+    return ResponseEntity.status(HttpStatus.CREATED).body(service.crear(mapear(req)));
   }
 
   @PutMapping("/{id}")
   public Viaje actualizar(@PathVariable Long id, @Valid @RequestBody ViajeRequest req) {
-    Viaje v = new Viaje(req.getTipo(), req.getOrigen(), req.getDestino(),
-        LocalDate.parse(req.getFecha()), req.getCosto());
-    return service.actualizar(id, v);
+    return service.actualizar(id, mapear(req));
   }
 
   @DeleteMapping("/{id}")

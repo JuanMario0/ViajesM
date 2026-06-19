@@ -3,7 +3,7 @@ package com.viajesm.model;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
-@Entity // Esta clase es una tabla en la base de datos
+@Entity
 @Table(name = "viajes")
 public class Viaje {
 
@@ -12,7 +12,7 @@ public class Viaje {
   private Long id;
 
   @Column(nullable = false)
-  private String tipo; // Tren Ligero, Combi, Trolebús
+  private String tipo;
 
   @Column(nullable = false)
   private String origen;
@@ -26,15 +26,25 @@ public class Viaje {
   @Column(nullable = false)
   private Double costo;
 
-  public Viaje() {}
+  @Column
+  private String horaSalida;
 
-  public Viaje(String tipo, String origen, String destino, LocalDate fecha, Double costo) {
-    this.tipo = tipo;
-    this.origen = origen;
-    this.destino = destino;
-    this.fecha = fecha;
-    this.costo = costo;
-  }
+  @Column
+  private String horaLlegada;
+
+  @Column
+  private Double origenLat;
+
+  @Column
+  private Double origenLng;
+
+  @Column
+  private Double destinoLat;
+
+  @Column
+  private Double destinoLng;
+
+  public Viaje() {}
 
   public Long getId() { return id; }
   public void setId(Long id) { this.id = id; }
@@ -53,4 +63,22 @@ public class Viaje {
 
   public Double getCosto() { return costo; }
   public void setCosto(Double costo) { this.costo = costo; }
+
+  public String getHoraSalida() { return horaSalida; }
+  public void setHoraSalida(String horaSalida) { this.horaSalida = horaSalida; }
+
+  public String getHoraLlegada() { return horaLlegada; }
+  public void setHoraLlegada(String horaLlegada) { this.horaLlegada = horaLlegada; }
+
+  public Double getOrigenLat() { return origenLat; }
+  public void setOrigenLat(Double origenLat) { this.origenLat = origenLat; }
+
+  public Double getOrigenLng() { return origenLng; }
+  public void setOrigenLng(Double origenLng) { this.origenLng = origenLng; }
+
+  public Double getDestinoLat() { return destinoLat; }
+  public void setDestinoLat(Double destinoLat) { this.destinoLat = destinoLat; }
+
+  public Double getDestinoLng() { return destinoLng; }
+  public void setDestinoLng(Double destinoLng) { this.destinoLng = destinoLng; }
 }

@@ -39,6 +39,12 @@ public class ViajeService {
     v.setDestino(datos.getDestino());
     v.setFecha(datos.getFecha());
     v.setCosto(datos.getCosto());
+    v.setHoraSalida(datos.getHoraSalida());
+    v.setHoraLlegada(datos.getHoraLlegada());
+    v.setOrigenLat(datos.getOrigenLat());
+    v.setOrigenLng(datos.getOrigenLng());
+    v.setDestinoLat(datos.getDestinoLat());
+    v.setDestinoLng(datos.getDestinoLng());
     return repo.save(v);
   }
 
