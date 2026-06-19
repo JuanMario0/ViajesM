@@ -1,0 +1,7 @@
+back/target/
+back/*.jar
+.idea/
+*.iml
+*.log
+.DS_Store
+node_modules/
