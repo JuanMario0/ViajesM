@@ -37,3 +37,33 @@ export const COLORES: Record<string, string> = {
   Combi: "#a3a3a3",
   Trolebús: "#d4d4d4",
 };
+
+const VELOCIDAD_KMH: Record<string, number> = {
+  "Tren Ligero": 25,
+  Combi: 18,
+  Trolebús: 14,
+};
+
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+export function estimarDuracion(origenLat: number, origenLng: number, destLat: number, destLng: number, tipo: string) {
+  const km = haversineKm(origenLat, origenLng, destLat, destLng);
+  const kmRuta = km * 1.4;
+  const velocidad = VELOCIDAD_KMH[tipo] || 20;
+  const minutos = Math.round((kmRuta / velocidad) * 60 + 5);
+  return minutos;
+}
+
+export function calcularLlegada(horaSalida: string, minutos: number) {
+  const [h, m] = horaSalida.split(":").map(Number);
+  const total = h * 60 + m + minutos;
+  const hh = Math.floor(total / 60) % 24;
+  const mm = total % 60;
+  return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+}

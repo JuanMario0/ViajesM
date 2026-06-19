@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Viaje } from "@/types";
-import { geocodificar } from "@/lib/api";
+import { geocodificar, estimarDuracion, calcularLlegada } from "@/lib/api";
 
 interface Props {
   viaje: Viaje | null;
@@ -34,6 +34,10 @@ export default function ModalViaje({ viaje, onSave, onClose }: Props) {
       const [o, dest] = await Promise.all([geocodificar(body.origen), geocodificar(body.destino)]);
       if (o) { body.origenLat = o.lat; body.origenLng = o.lng; }
       if (dest) { body.destinoLat = dest.lat; body.destinoLng = dest.lng; }
+      if (body.horaSalida && o && dest) {
+        const min = estimarDuracion(o.lat, o.lng, dest.lat, dest.lng, body.tipo);
+        body.horaLlegada = calcularLlegada(body.horaSalida, min);
+      }
       await onSave(body);
     } finally {
       setLoading(false);
@@ -94,7 +98,7 @@ export default function ModalViaje({ viaje, onSave, onClose }: Props) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
             </svg>
-            Las coordenadas se obtienen automáticamente del nombre del lugar.
+            Coordenadas y llegada estimada se calculan al guardar.
           </div>
           <button type="submit" disabled={loading} className="w-full rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2">
             {loading ? "Guardando..." : "Guardar"}
