@@ -5,15 +5,16 @@ export async function req<T>(path: string, opts?: RequestInit): Promise<T> {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   if (token) headers["Authorization"] = "Bearer " + token;
   const r = await fetch(API + path, { headers, ...opts });
-  if (r.status === 401) {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    if (typeof window !== "undefined") window.location.href = "/login";
-    throw new Error("Sesión expirada");
-  }
   if (!r.ok) {
-    const e = await r.json().catch(() => ({ error: "Error" }));
-    throw new Error(e.error || "Error");
+    if (r.status === 401 && typeof window !== "undefined") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+    }
+    const text = await r.text().catch(() => "");
+    let msg = `HTTP ${r.status}`;
+    try { const j = JSON.parse(text); msg = j.error || j.message || msg; } catch {}
+    throw new Error(msg);
   }
   return r.status === 204 ? null as T : r.json();
 }

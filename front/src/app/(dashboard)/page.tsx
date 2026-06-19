@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
 import type { Viaje, Stats } from "@/types";
 import { req, COLORES, TIPOS } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import StatsCards from "@/components/StatsCards";
 import RouteTimes from "@/components/RouteTimes";
 import Charts from "@/components/Charts";
@@ -13,19 +14,23 @@ import ModalViaje from "@/components/ModalViaje";
 const Mapa = dynamic(() => import("@/components/Mapa"), { ssr: false });
 
 export default function Dashboard() {
+  const { user } = useAuth();
   const [viajes, setViajes] = useState<Viaje[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [filter, setFilter] = useState("all");
   const [editando, setEditando] = useState<Viaje | null>(null);
 
   const cargar = useCallback(async () => {
-    const [v, s] = await Promise.all([
-      req<Viaje[]>("/viajes?tipo=" + filter),
-      req<Stats>("/stats"),
-    ]);
-    setViajes(v);
-    setStats(s);
-  }, [filter]);
+    if (!user) return;
+    try {
+      const [v, s] = await Promise.all([
+        req<Viaje[]>("/viajes?tipo=" + filter),
+        req<Stats>("/stats"),
+      ]);
+      setViajes(v);
+      setStats(s);
+    } catch {} // redirect handled by layout / req()
+  }, [filter, user]);
 
   useEffect(() => { cargar(); }, [cargar]);
 
