@@ -41,7 +41,7 @@ export default function Dashboard() {
   useEffect(() => { cargar(); }, [cargar]);
 
   const handleSave = async (data: any) => {
-    if (editando) await req("/viajes/" + editando.id, { method: "PUT", body: JSON.stringify(data) });
+    if (editando?.id) await req("/viajes/" + editando.id, { method: "PUT", body: JSON.stringify(data) });
     else await req("/viajes", { method: "POST", body: JSON.stringify(data) });
     setEditando(null);
     cargar();
