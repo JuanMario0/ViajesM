@@ -35,8 +35,8 @@ export async function geocodificar(texto: string) {
 export const TIPOS = ["Tren Ligero", "Combi", "Trolebús"] as const;
 export const COLORES: Record<string, string> = {
   "Tren Ligero": "#525252",
-  Combi: "#a3a3a3",
-  Trolebús: "#d4d4d4",
+  Combi: "#16a34a",
+  Trolebús: "#2563eb",
 };
 
 const VELOCIDAD_KMH: Record<string, number> = {
