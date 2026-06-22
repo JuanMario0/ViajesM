@@ -32,6 +32,15 @@ export async function geocodificar(texto: string) {
   return null;
 }
 
+export async function fetchRoute(origenLat: number, origenLng: number, destLat: number, destLng: number): Promise<[number, number][]> {
+  const r = await fetch(
+    `https://router.project-osrm.org/route/v1/driving/${origenLng},${origenLat};${destLng},${destLat}?geometries=geojson&overview=full`
+  );
+  const data = await r.json();
+  if (!data.routes?.length) return [];
+  return data.routes[0].geometry.coordinates.map((c: [number, number]) => [c[1], c[0]]);
+}
+
 export const TIPOS = ["Tren Ligero", "Combi", "Trolebús"] as const;
 export const COLORES: Record<string, string> = {
   "Tren Ligero": "#525252",
