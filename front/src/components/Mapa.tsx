@@ -12,9 +12,16 @@ export default function Mapa({ viajes }: { viajes: Viaje[] }) {
 
   useEffect(() => {
     if (!mapRef.current || mapa.current) return;
-    mapa.current = L.map(mapRef.current, { zoomControl: true, attributionControl: false }).setView([19.3, -99.1], 11);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(mapa.current);
-    setTimeout(() => mapa.current?.invalidateSize(), 200);
+    const m = L.map(mapRef.current, { zoomControl: true, attributionControl: false }).setView([19.3, -99.1], 11);
+
+    const normal = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", { maxZoom: 19 });
+    const satelite = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19 });
+
+    normal.addTo(m);
+    L.control.layers({ "Mapa": normal, "Satélite": satelite }, {}, { position: "bottomleft" }).addTo(m);
+
+    mapa.current = m;
+    setTimeout(() => m.invalidateSize(), 200);
   }, []);
 
   useEffect(() => {
