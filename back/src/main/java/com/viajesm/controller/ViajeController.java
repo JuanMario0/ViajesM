@@ -22,8 +22,14 @@ public class ViajeController {
   }
 
   @GetMapping
-  public List<Viaje> listar(@RequestParam(defaultValue = "all") String tipo) {
-    return service.listar(tipo);
+  public List<Viaje> listar(@RequestParam(defaultValue = "all") String tipo,
+                            @RequestParam(required = false) String fecha) {
+    return service.listar(tipo, fecha);
+  }
+
+  @GetMapping("/fechas")
+  public List<LocalDate> fechas() {
+    return service.fechasDisponibles();
   }
 
   @GetMapping("/{id}")

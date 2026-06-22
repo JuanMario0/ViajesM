@@ -17,6 +17,8 @@ public interface ViajeRepository extends JpaRepository<Viaje, Long> {
   // Buscar por fecha exacta
   List<Viaje> findByFecha(LocalDate fecha);
 
+  List<Viaje> findByFechaAndTipo(LocalDate fecha, String tipo);
+
   // Viajes de un mes específico (entre dos fechas)
   List<Viaje> findByFechaBetween(LocalDate inicio, LocalDate fin);
 
@@ -31,4 +33,7 @@ public interface ViajeRepository extends JpaRepository<Viaje, Long> {
   // Gasto total de un mes específico
   @Query("SELECT COALESCE(SUM(v.costo), 0) FROM Viaje v WHERE v.fecha BETWEEN ?1 AND ?2")
   Double sumCostBetween(LocalDate inicio, LocalDate fin);
+
+  @Query("SELECT DISTINCT v.fecha FROM Viaje v ORDER BY v.fecha DESC")
+  List<LocalDate> findDistinctFechas();
 }

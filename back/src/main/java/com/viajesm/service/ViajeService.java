@@ -17,10 +17,20 @@ public class ViajeService {
     this.repo = repo;
   }
 
-  public List<Viaje> listar(String tipo) {
+  public List<Viaje> listar(String tipo, String fecha) {
+    if (fecha != null && !fecha.isEmpty()) {
+      LocalDate d = LocalDate.parse(fecha);
+      if (tipo == null || tipo.isEmpty() || tipo.equals("all"))
+        return repo.findByFecha(d);
+      return repo.findByFechaAndTipo(d, tipo);
+    }
     if (tipo == null || tipo.isEmpty() || tipo.equals("all"))
       return repo.findAll();
     return repo.findByTipo(tipo);
+  }
+
+  public List<LocalDate> fechasDisponibles() {
+    return repo.findDistinctFechas();
   }
 
   public Viaje obtener(Long id) {

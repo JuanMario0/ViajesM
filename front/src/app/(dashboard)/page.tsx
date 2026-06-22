@@ -13,24 +13,30 @@ import ModalViaje from "@/components/ModalViaje";
 
 const Mapa = dynamic(() => import("@/components/Mapa"), { ssr: false });
 
+function hoy() { return new Date().toISOString().slice(0, 10); }
+
 export default function Dashboard() {
   const { user } = useAuth();
   const [viajes, setViajes] = useState<Viaje[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [filter, setFilter] = useState("all");
+  const [fecha, setFecha] = useState(hoy);
+  const [fechas, setFechas] = useState<string[]>([]);
   const [editando, setEditando] = useState<Viaje | null>(null);
 
   const cargar = useCallback(async () => {
     if (!user) return;
     try {
-      const [v, s] = await Promise.all([
-        req<Viaje[]>("/viajes?tipo=" + filter),
+      const [v, s, f] = await Promise.all([
+        req<Viaje[]>(`/viajes?tipo=${filter}&fecha=${fecha}`),
         req<Stats>("/stats"),
+        req<string[]>("/viajes/fechas"),
       ]);
       setViajes(v);
       setStats(s);
-    } catch {} // redirect handled by layout / req()
-  }, [filter, user]);
+      setFechas(f);
+    } catch {}
+  }, [filter, fecha, user]);
 
   useEffect(() => { cargar(); }, [cargar]);
 
@@ -65,8 +71,35 @@ export default function Dashboard() {
             </div>
           </div>
           <Mapa viajes={viajes} />
+          {!viajes.length && (
+            <p className="mt-3 text-center text-xs text-neutral-400">Sin viajes esta fecha.</p>
+          )}
         </div>
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-4">
+          <div className="rounded-xl border border-neutral-200 bg-white p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-neutral-900 text-balance">Fecha</h3>
+              <input
+                type="date"
+                value={fecha}
+                onChange={e => setFecha(e.target.value)}
+                className="rounded-lg border border-neutral-200 px-3 py-1.5 text-sm text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900"
+              />
+            </div>
+            {fechas.length > 1 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {fechas.filter(d => d !== fecha).slice(0, 7).map(d => (
+                  <button
+                    key={d}
+                    onClick={() => setFecha(d)}
+                    className="rounded-md bg-neutral-100 px-2.5 py-1 text-xs text-neutral-600 transition-colors hover:bg-neutral-200"
+                  >
+                    {d.slice(5)}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <RouteTimes viajes={viajes} />
         </div>
       </div>
