@@ -18,7 +18,7 @@ export default function RegisterPage() {
     const fd = new FormData(e.currentTarget);
     try {
       await register(fd.get("name") as string, fd.get("email") as string, fd.get("password") as string);
-      router.push("/");
+      router.push("/dashboard");
     } catch (err: any) {
       setError(err.message);
     } finally {

@@ -18,13 +18,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
       <header className="mb-8 flex items-center justify-between">
         <div>
-          <Link href="/">
+          <Link href="/dashboard">
             <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">ViajesM</h1>
           </Link>
           <p className="mt-1 text-sm text-neutral-500 text-pretty">Gastos de transporte · CDMX</p>
         </div>
         <nav className="flex items-center gap-4">
-          <Link href="/" className="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors">
+          <Link href="/dashboard" className="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors">
             Dashboard
           </Link>
           {user ? (

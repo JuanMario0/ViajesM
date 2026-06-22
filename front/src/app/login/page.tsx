@@ -18,7 +18,7 @@ export default function LoginPage() {
     const fd = new FormData(e.currentTarget);
     try {
       await login(fd.get("email") as string, fd.get("password") as string);
-      router.push("/");
+      router.push("/dashboard");
     } catch (err: any) {
       setError(err.message);
     } finally {
