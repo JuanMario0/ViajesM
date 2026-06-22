@@ -1,14 +1,9 @@
 "use client";
 
-import { req, fmt, COLORES } from "@/lib/api";
+import { fmt } from "@/lib/api";
 import type { Stats } from "@/types";
-import { useEffect, useState } from "react";
 
-export default function StatsCards() {
-  const [s, setStats] = useState<Stats | null>(null);
-
-  useEffect(() => { req<Stats>("/stats").then(setStats).catch(e => console.error("Stats:", e)); }, []);
-
+export default function StatsCards({ s }: { s: Stats | null }) {
   if (!s) return (
     <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {[1, 2, 3, 4].map(i => (

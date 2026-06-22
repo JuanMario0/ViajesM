@@ -55,7 +55,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <StatsCards />
+      <StatsCards s={stats} />
 
       <div className="mb-6 grid gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3 rounded-xl border border-neutral-200 bg-white p-4">
