@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 export default function StatsCards() {
   const [s, setStats] = useState<Stats | null>(null);
 
-  useEffect(() => { req<Stats>("/stats").then(setStats).catch(() => {}); }, []);
+  useEffect(() => { req<Stats>("/stats").then(setStats).catch(e => console.error("Stats:", e)); }, []);
 
   if (!s) return (
     <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
